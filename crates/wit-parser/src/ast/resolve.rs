@@ -1586,6 +1586,16 @@ impl<'a> Resolver<'a> {
     ) -> Result<Params> {
         let mut ret = IndexMap::new();
         match *kind {
+            FunctionKind::Getter(_) if params.len() != 0 => {
+                bail!(Error::new(span, "getter may not define any parameters"))
+            }
+            FunctionKind::Setter(_) if params.len() != 1 => bail!(Error::new(
+                span,
+                "setter must declare exactly one parameter"
+            )),
+            _ => {}
+        }
+        match *kind {
             // These kinds of methods don't have any adjustments to the
             // parameters, so do nothing here.
             FunctionKind::Freestanding | FunctionKind::Constructor(_) | FunctionKind::Static(_) => {
