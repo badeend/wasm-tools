@@ -263,6 +263,8 @@ enum ParsedComponentNameKind {
     Constructor,
     Method,
     Static,
+    Getter,
+    Setter,
     Interface,
     Dependency,
     Url,
@@ -279,6 +281,12 @@ pub enum ComponentNameKind<'a> {
     /// `[method]a-b.c-d`
     #[allow(missing_docs)]
     Method(ResourceFunc<'a>),
+    /// `[get]a-b.c-d`
+    #[allow(missing_docs)]
+    Getter(ResourceFunc<'a>),
+    /// `[set]a-b.c-d`
+    #[allow(missing_docs)]
+    Setter(ResourceFunc<'a>),
     /// `[static]a-b.c-d`
     #[allow(missing_docs)]
     Static(ResourceFunc<'a>),
@@ -299,6 +307,8 @@ pub enum ComponentNameKind<'a> {
 const CONSTRUCTOR: &str = "[constructor]";
 const METHOD: &str = "[method]";
 const STATIC: &str = "[static]";
+const GET: &str = "[get]";
+const SET: &str = "[set]";
 
 impl ComponentName {
     /// Attempts to parse `name` as a valid component name, returning `Err` if
@@ -337,6 +347,8 @@ impl ComponentName {
             PK::Constructor => Constructor(KebabStr::new_unchecked(&self.raw[CONSTRUCTOR.len()..])),
             PK::Method => Method(ResourceFunc(&self.raw[METHOD.len()..])),
             PK::Static => Static(ResourceFunc(&self.raw[STATIC.len()..])),
+            PK::Getter => Getter(ResourceFunc(&self.raw[GET.len()..])),
+            PK::Setter => Setter(ResourceFunc(&self.raw[SET.len()..])),
             PK::Interface => Interface(InterfaceName(&self.raw)),
             PK::Dependency => Dependency(DependencyName(&self.raw)),
             PK::Url => Url(UrlName(&self.raw)),
@@ -402,6 +414,8 @@ impl ComponentNameKind<'_> {
             Self::Constructor(_) => ParsedComponentNameKind::Constructor,
             Self::Method(_) => ParsedComponentNameKind::Method,
             Self::Static(_) => ParsedComponentNameKind::Static,
+            Self::Getter(_) => ParsedComponentNameKind::Getter,
+            Self::Setter(_) => ParsedComponentNameKind::Setter,
             Self::Interface(_) => ParsedComponentNameKind::Interface,
             Self::Dependency(_) => ParsedComponentNameKind::Dependency,
             Self::Url(_) => ParsedComponentNameKind::Url,
@@ -421,10 +435,16 @@ impl Ord for ComponentNameKind<'_> {
             (ComponentNameKind::Constructor(lhs), ComponentNameKind::Constructor(rhs)) => {
                 lhs.cmp(rhs)
             }
-            (ComponentNameKind::Method(lhs), ComponentNameKind::Method(rhs)) => lhs.cmp(rhs),
-            (ComponentNameKind::Method(lhs), ComponentNameKind::Static(rhs)) => lhs.cmp(rhs),
-            (ComponentNameKind::Static(lhs), ComponentNameKind::Method(rhs)) => lhs.cmp(rhs),
-            (ComponentNameKind::Static(lhs), ComponentNameKind::Static(rhs)) => lhs.cmp(rhs),
+            (
+                ComponentNameKind::Method(lhs)
+                | ComponentNameKind::Static(lhs)
+                | ComponentNameKind::Getter(lhs)
+                | ComponentNameKind::Setter(lhs),
+                ComponentNameKind::Method(rhs)
+                | ComponentNameKind::Static(rhs)
+                | ComponentNameKind::Getter(rhs)
+                | ComponentNameKind::Setter(rhs),
+            ) => lhs.cmp(rhs),
             (ComponentNameKind::Interface(lhs), ComponentNameKind::Interface(rhs)) => lhs.cmp(rhs),
             (ComponentNameKind::Dependency(lhs), ComponentNameKind::Dependency(rhs)) => {
                 lhs.cmp(rhs)
@@ -449,7 +469,7 @@ impl Hash for ComponentNameKind<'_> {
             Label(name) => (0u8, name).hash(hasher),
             Constructor(name) => (1u8, name).hash(hasher),
             // for hashing method == static
-            Method(name) | Static(name) => (2u8, name).hash(hasher),
+            Method(name) | Static(name) | Getter(name) | Setter(name) => (2u8, name).hash(hasher),
             Interface(name) => (3u8, name).hash(hasher),
             Dependency(name) => (4u8, name).hash(hasher),
             Url(name) => (5u8, name).hash(hasher),
@@ -469,13 +489,15 @@ impl PartialEq for ComponentNameKind<'_> {
 
             // method == static for the purposes of hashing so equate them here
             // as well.
-            (Method(a), Method(b))
-            | (Static(a), Static(b))
-            | (Method(a), Static(b))
-            | (Static(a), Method(b)) => a == b,
+            (
+                Method(a) | Static(a) | Getter(a) | Setter(a),
+                Method(b) | Static(b) | Getter(b) | Setter(b),
+            ) => a == b,
 
             (Method(_), _) => false,
             (Static(_), _) => false,
+            (Getter(_), _) => false,
+            (Setter(_), _) => false,
 
             (Interface(a), Interface(b)) => a == b,
             (Interface(_), _) => false,
@@ -614,6 +636,18 @@ impl<'a> ComponentNameParser<'a> {
             self.kebab(resource)?;
             self.expect_kebab()?;
             return Ok(ParsedComponentNameKind::Static);
+        }
+        if self.eat_str(GET) {
+            let resource = self.take_until('.')?;
+            self.kebab(resource)?;
+            self.expect_kebab()?;
+            return Ok(ParsedComponentNameKind::Getter);
+        }
+        if self.eat_str(SET) {
+            let resource = self.take_until('.')?;
+            self.kebab(resource)?;
+            self.expect_kebab()?;
+            return Ok(ParsedComponentNameKind::Setter);
         }
 
         // 'unlocked-dep=<' <pkgnamequery> '>'

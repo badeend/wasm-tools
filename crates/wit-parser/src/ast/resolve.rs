@@ -1016,6 +1016,14 @@ impl<'a> Resolver<'a> {
                 name = format!("[method]{}.{}", resource.name, f.name.name);
                 kind = FunctionKind::Method(resource_id);
             }
+            ast::ResourceFunc::Getter(f) => {
+                name = format!("[get]{}.{}", resource.name, f.name.name);
+                kind = FunctionKind::Getter(resource_id);
+            }
+            ast::ResourceFunc::Setter(f) => {
+                name = format!("[set]{}.{}", resource.name, f.name.name);
+                kind = FunctionKind::Setter(resource_id);
+            }
             ast::ResourceFunc::Static(f) => {
                 name = format!("[static]{}.{}", resource.name, f.name.name);
                 kind = FunctionKind::Static(resource_id);
@@ -1162,7 +1170,10 @@ impl<'a> Resolver<'a> {
                 let mut names = HashSet::new();
                 for func in resource.funcs.iter() {
                     match func {
-                        ast::ResourceFunc::Method(f) | ast::ResourceFunc::Static(f) => {
+                        ast::ResourceFunc::Method(f)
+                        | ast::ResourceFunc::Static(f)
+                        | ast::ResourceFunc::Getter(f)
+                        | ast::ResourceFunc::Setter(f) => {
                             if !names.insert(&f.name.name) {
                                 bail!(Error::new(
                                     f.name.span,
@@ -1551,7 +1562,7 @@ impl<'a> Resolver<'a> {
 
             // Methods automatically get a `self` initial argument so insert
             // that here before processing the normal parameters.
-            FunctionKind::Method(id) => {
+            FunctionKind::Method(id) | FunctionKind::Getter(id) | FunctionKind::Setter(id) => {
                 let kind = TypeDefKind::Handle(Handle::Borrow(id));
                 let stability = self.find_stability(&kind, &Stability::Unknown);
                 let shared = self.anon_type_def(
@@ -1591,18 +1602,20 @@ impl<'a> Resolver<'a> {
         match *kind {
             // These kinds of methods don't have any adjustments to the return
             // values, so plumb them through as-is.
-            FunctionKind::Freestanding | FunctionKind::Method(_) | FunctionKind::Static(_) => {
-                match results {
-                    ResultList::Named(rs) => Ok(Results::Named(self.resolve_params(
-                        rs,
-                        &FunctionKind::Freestanding,
-                        span,
-                    )?)),
-                    ResultList::Anon(ty) => {
-                        Ok(Results::Anon(self.resolve_type(ty, &Stability::Unknown)?))
-                    }
+            FunctionKind::Freestanding
+            | FunctionKind::Method(_)
+            | FunctionKind::Static(_)
+            | FunctionKind::Getter(_)
+            | FunctionKind::Setter(_) => match results {
+                ResultList::Named(rs) => Ok(Results::Named(self.resolve_params(
+                    rs,
+                    &FunctionKind::Freestanding,
+                    span,
+                )?)),
+                ResultList::Anon(ty) => {
+                    Ok(Results::Anon(self.resolve_type(ty, &Stability::Unknown)?))
                 }
-            }
+            },
 
             // Constructors are alwys parsed as 0 returned types but they're
             // automatically translated as a single return type of the type that

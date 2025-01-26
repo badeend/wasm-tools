@@ -409,6 +409,20 @@ impl Render for TypeDef {
                             }
                             write!(f, ";\n")?;
                         }
+                        crate::ResourceFuncKind::Getter(name, results) => {
+                            write!(f, "{}{}: get func({})", opts.spaces(), name, func.params)?;
+                            if !results.is_empty() {
+                                write!(f, " -> {}", results)?;
+                            }
+                            write!(f, ";\n")?;
+                        }
+                        crate::ResourceFuncKind::Setter(name, results) => {
+                            write!(f, "{}{}: set func({})", opts.spaces(), name, func.params)?;
+                            if !results.is_empty() {
+                                write!(f, " -> {}", results)?;
+                            }
+                            write!(f, ";\n")?;
+                        }
                         crate::ResourceFuncKind::Static(name, results) => {
                             write!(f, "{}{}: static func({})", opts.spaces(), name, func.params)?;
                             if !results.is_empty() {

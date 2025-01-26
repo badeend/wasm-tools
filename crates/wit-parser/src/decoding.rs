@@ -1220,6 +1220,12 @@ impl WitPackageDecoder<'_> {
                 ComponentNameKind::Static(name) => {
                     FunctionKind::Static(self.resources[&owner][name.resource().as_str()])
                 }
+                ComponentNameKind::Getter(name) => {
+                    FunctionKind::Getter(self.resources[&owner][name.resource().as_str()])
+                }
+                ComponentNameKind::Setter(name) => {
+                    FunctionKind::Setter(self.resources[&owner][name.resource().as_str()])
+                }
 
                 // Functions shouldn't have ID-based names at this time.
                 ComponentNameKind::Interface(_)

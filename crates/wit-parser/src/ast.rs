@@ -766,6 +766,8 @@ enum ResourceFunc<'a> {
     Method(NamedFunc<'a>),
     Static(NamedFunc<'a>),
     Constructor(NamedFunc<'a>),
+    Getter(NamedFunc<'a>),
+    Setter(NamedFunc<'a>),
 }
 
 impl<'a> ResourceFunc<'a> {
@@ -804,6 +806,10 @@ impl<'a> ResourceFunc<'a> {
                 tokens.expect(Token::Colon)?;
                 let ctor = if tokens.eat(Token::Static)? {
                     ResourceFunc::Static
+                } else if tokens.eat(Token::Get)? {
+                    ResourceFunc::Getter
+                } else if tokens.eat(Token::Set)? {
+                    ResourceFunc::Setter
                 } else {
                     ResourceFunc::Method
                 };
@@ -823,7 +829,7 @@ impl<'a> ResourceFunc<'a> {
     fn named_func(&self) -> &NamedFunc<'a> {
         use ResourceFunc::*;
         match self {
-            Method(f) | Static(f) | Constructor(f) => f,
+            Method(f) | Static(f) | Constructor(f) | Getter(f) | Setter(f) => f,
         }
     }
 }

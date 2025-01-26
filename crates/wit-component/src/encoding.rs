@@ -1005,6 +1005,8 @@ impl<'a> EncodingState<'a> {
                 // enough for now hopefully.
                 FunctionKind::Method(_)
                 | FunctionKind::Static(_)
+                | FunctionKind::Getter(_)
+                | FunctionKind::Setter(_)
                 | FunctionKind::Constructor(_) => {
                     format!(
                         "import-{}",

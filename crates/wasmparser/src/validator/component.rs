@@ -3812,6 +3812,8 @@ impl ComponentNameContext {
                 ComponentNameKind::Label(_)
                 | ComponentNameKind::Method(_)
                 | ComponentNameKind::Static(_)
+                | ComponentNameKind::Getter(_)
+                | ComponentNameKind::Setter(_)
                 | ComponentNameKind::Constructor(_)
                 | ComponentNameKind::Interface(_) => {}
 
@@ -3907,7 +3909,9 @@ impl ComponentNameContext {
             // Methods must take `(param "self" (borrow $resource))` as the
             // first argument where `$resources` matches the name `resource` as
             // named in this context.
-            ComponentNameKind::Method(name) => {
+            ComponentNameKind::Method(name)
+            | ComponentNameKind::Getter(name)
+            | ComponentNameKind::Setter(name) => {
                 let ty = func()?;
                 if ty.params.len() == 0 {
                     bail!(offset, "function should have at least one argument");

@@ -894,6 +894,10 @@ pub enum FunctionKind {
     #[cfg_attr(feature = "serde", serde(serialize_with = "serialize_id"))]
     Static(TypeId),
     #[cfg_attr(feature = "serde", serde(serialize_with = "serialize_id"))]
+    Getter(TypeId),
+    #[cfg_attr(feature = "serde", serde(serialize_with = "serialize_id"))]
+    Setter(TypeId),
+    #[cfg_attr(feature = "serde", serde(serialize_with = "serialize_id"))]
     Constructor(TypeId),
 }
 
@@ -902,9 +906,11 @@ impl FunctionKind {
     pub fn resource(&self) -> Option<TypeId> {
         match self {
             FunctionKind::Freestanding => None,
-            FunctionKind::Method(id) | FunctionKind::Static(id) | FunctionKind::Constructor(id) => {
-                Some(*id)
-            }
+            FunctionKind::Method(id)
+            | FunctionKind::Static(id)
+            | FunctionKind::Constructor(id)
+            | FunctionKind::Getter(id)
+            | FunctionKind::Setter(id) => Some(*id),
         }
     }
 }
@@ -1024,9 +1030,10 @@ impl Function {
     pub fn item_name(&self) -> &str {
         match &self.kind {
             FunctionKind::Freestanding => &self.name,
-            FunctionKind::Method(_) | FunctionKind::Static(_) => {
-                &self.name[self.name.find('.').unwrap() + 1..]
-            }
+            FunctionKind::Method(_)
+            | FunctionKind::Static(_)
+            | FunctionKind::Getter(_)
+            | FunctionKind::Setter(_) => &self.name[self.name.find('.').unwrap() + 1..],
             FunctionKind::Constructor(_) => "constructor",
         }
     }

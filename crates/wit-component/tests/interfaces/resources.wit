@@ -5,6 +5,8 @@ interface foo {
     constructor();
     a: static func();
     b: func();
+    c: get func() -> u32;
+    d: set func(value: u32);
   }
 
   a: func(x: bar) -> bar;

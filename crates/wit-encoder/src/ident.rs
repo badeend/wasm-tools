@@ -44,9 +44,9 @@ fn is_keyword(name: &str) -> bool {
     match name {
         "u8" | "u16" | "u32" | "u64" | "s8" | "s16" | "s32" | "s64" | "f32" | "f64" | "char"
         | "bool" | "string" | "tuple" | "list" | "option" | "result" | "use" | "type"
-        | "resource" | "func" | "record" | "enum" | "flags" | "variant" | "static"
-        | "interface" | "world" | "import" | "export" | "package" | "own" | "borrow" | "future"
-        | "stream" | "constructor" | "with" | "from" | "as" | "include" => true,
+        | "resource" | "func" | "record" | "enum" | "flags" | "variant" | "static" | "get"
+        | "set" | "interface" | "world" | "import" | "export" | "package" | "own" | "borrow"
+        | "future" | "stream" | "constructor" | "with" | "from" | "as" | "include" => true,
         _ => false,
     }
 }

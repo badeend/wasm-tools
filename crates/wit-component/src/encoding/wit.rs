@@ -299,9 +299,11 @@ impl InterfaceEncoder<'_> {
         let mut funcs = iface.functions.iter().collect::<Vec<_>>();
         funcs.sort_by_key(|(_name, func)| match func.kind {
             FunctionKind::Freestanding => type_order.len(),
-            FunctionKind::Method(id) | FunctionKind::Constructor(id) | FunctionKind::Static(id) => {
-                type_order.get_index_of(&id).unwrap()
-            }
+            FunctionKind::Method(id)
+            | FunctionKind::Constructor(id)
+            | FunctionKind::Static(id)
+            | FunctionKind::Getter(id)
+            | FunctionKind::Setter(id) => type_order.get_index_of(&id).unwrap(),
         });
 
         for (name, func) in funcs {

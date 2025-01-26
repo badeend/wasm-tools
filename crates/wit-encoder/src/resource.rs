@@ -40,6 +40,8 @@ pub struct ResourceFunc {
 pub enum ResourceFuncKind {
     Method(Ident, Results),
     Static(Ident, Results),
+    Getter(Ident, Results),
+    Setter(Ident, Results),
     Constructor,
 }
 
@@ -47,6 +49,22 @@ impl ResourceFunc {
     pub fn method(name: impl Into<Ident>) -> Self {
         Self {
             kind: ResourceFuncKind::Method(name.into(), Results::empty()),
+            params: Params::empty(),
+            docs: None,
+        }
+    }
+
+    pub fn getter(name: impl Into<Ident>) -> Self {
+        Self {
+            kind: ResourceFuncKind::Getter(name.into(), Results::empty()),
+            params: Params::empty(),
+            docs: None,
+        }
+    }
+
+    pub fn setter(name: impl Into<Ident>) -> Self {
+        Self {
+            kind: ResourceFuncKind::Setter(name.into(), Results::empty()),
             params: Params::empty(),
             docs: None,
         }
@@ -72,6 +90,12 @@ impl ResourceFunc {
         match &self.kind {
             ResourceFuncKind::Method(_, results) => {
                 self.kind = ResourceFuncKind::Method(name.into(), results.clone())
+            }
+            ResourceFuncKind::Getter(_, results) => {
+                self.kind = ResourceFuncKind::Getter(name.into(), results.clone())
+            }
+            ResourceFuncKind::Setter(_, results) => {
+                self.kind = ResourceFuncKind::Setter(name.into(), results.clone())
             }
             ResourceFuncKind::Static(_, results) => {
                 self.kind = ResourceFuncKind::Static(name.into(), results.clone())
@@ -101,6 +125,12 @@ impl ResourceFunc {
             ResourceFuncKind::Method(name, _) => {
                 self.kind = ResourceFuncKind::Method(name.clone(), results.into())
             }
+            ResourceFuncKind::Getter(name, _) => {
+                self.kind = ResourceFuncKind::Getter(name.clone(), results.into())
+            }
+            ResourceFuncKind::Setter(name, _) => {
+                self.kind = ResourceFuncKind::Setter(name.clone(), results.into())
+            }
             ResourceFuncKind::Static(name, _) => {
                 self.kind = ResourceFuncKind::Static(name.clone(), results.into())
             }
@@ -110,16 +140,20 @@ impl ResourceFunc {
 
     pub fn results(&self) -> Option<&Results> {
         match &self.kind {
-            ResourceFuncKind::Method(_, results) => Some(results),
-            ResourceFuncKind::Static(_, results) => Some(results),
+            ResourceFuncKind::Method(_, results)
+            | ResourceFuncKind::Static(_, results)
+            | ResourceFuncKind::Getter(_, results)
+            | ResourceFuncKind::Setter(_, results) => Some(results),
             ResourceFuncKind::Constructor => None,
         }
     }
 
     pub fn results_mut(&mut self) -> Option<&mut Results> {
         match &mut self.kind {
-            ResourceFuncKind::Method(_, results) => Some(results),
-            ResourceFuncKind::Static(_, results) => Some(results),
+            ResourceFuncKind::Method(_, results)
+            | ResourceFuncKind::Static(_, results)
+            | ResourceFuncKind::Getter(_, results)
+            | ResourceFuncKind::Setter(_, results) => Some(results),
             ResourceFuncKind::Constructor => None,
         }
     }

@@ -109,6 +109,40 @@
           "params": [],
           "results": []
         },
+        "[get]d.c": {
+          "name": "[get]d.c",
+          "kind": {
+            "getter": 3
+          },
+          "params": [
+            {
+              "name": "self",
+              "type": 5
+            }
+          ],
+          "results": [
+            {
+              "type": "u32"
+            }
+          ]
+        },
+        "[set]d.d": {
+          "name": "[set]d.d",
+          "kind": {
+            "setter": 3
+          },
+          "params": [
+            {
+              "name": "self",
+              "type": 5
+            },
+            {
+              "name": "value",
+              "type": "u32"
+            }
+          ],
+          "results": []
+        },
         "[constructor]e": {
           "name": "[constructor]e",
           "kind": {

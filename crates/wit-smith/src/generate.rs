@@ -530,6 +530,8 @@ impl<'a> InterfaceGenerator<'a> {
             Constructor,
             Static,
             Method,
+            Getter,
+            Setter,
         }
 
         let mut has_constructor = false;
@@ -555,6 +557,20 @@ impl<'a> InterfaceGenerator<'a> {
                     let mut part = format!("%");
                     part.push_str(&gen_unique_name(u, &mut names)?);
                     part.push_str(": ");
+                    self.gen_func_sig(u, &mut part, true)?;
+                    parts.push(part);
+                }
+                Item::Getter => {
+                    let mut part = format!("%");
+                    part.push_str(&gen_unique_name(u, &mut names)?);
+                    part.push_str(": get ");
+                    self.gen_func_sig(u, &mut part, true)?;
+                    parts.push(part);
+                }
+                Item::Setter => {
+                    let mut part = format!("%");
+                    part.push_str(&gen_unique_name(u, &mut names)?);
+                    part.push_str(": set ");
                     self.gen_func_sig(u, &mut part, true)?;
                     parts.push(part);
                 }

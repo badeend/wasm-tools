@@ -18,6 +18,9 @@ interface foo {
     a: func();
 
     b: static func();
+
+    c: get func() -> u32;
+    d: set func(value: u32);
   }
 
   resource e {

@@ -3154,7 +3154,11 @@ impl Remap {
     ) -> Result<()> {
         match &mut func.kind {
             FunctionKind::Freestanding => {}
-            FunctionKind::Method(id) | FunctionKind::Constructor(id) | FunctionKind::Static(id) => {
+            FunctionKind::Method(id)
+            | FunctionKind::Constructor(id)
+            | FunctionKind::Static(id)
+            | FunctionKind::Getter(id)
+            | FunctionKind::Setter(id) => {
                 self.update_type_id(id, span)?;
             }
         }
@@ -3630,12 +3634,16 @@ impl<'a> MergeMap<'a> {
 
             (FunctionKind::Method(from), FunctionKind::Method(into))
             | (FunctionKind::Constructor(from), FunctionKind::Constructor(into))
+            | (FunctionKind::Getter(from), FunctionKind::Getter(into))
+            | (FunctionKind::Setter(from), FunctionKind::Setter(into))
             | (FunctionKind::Static(from), FunctionKind::Static(into)) => self
                 .build_type_id(*from, *into)
                 .context("different function kind types")?,
 
             (FunctionKind::Method(_), _)
             | (FunctionKind::Constructor(_), _)
+            | (FunctionKind::Getter(_), _)
+            | (FunctionKind::Setter(_), _)
             | (FunctionKind::Static(_), _)
             | (FunctionKind::Freestanding, _) => {
                 bail!("different function kind types")

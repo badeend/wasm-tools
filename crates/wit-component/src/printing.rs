@@ -311,6 +311,18 @@ impl<O: Output> WitPrinter<O> {
                     self.print_name_type(func.item_name(), TypeKind::FunctionMethod);
                     self.output.str(": ");
                 }
+                FunctionKind::Getter(_) => {
+                    self.print_name_type(func.item_name(), TypeKind::FunctionGetter);
+                    self.output.str(": ");
+                    self.output.keyword("get");
+                    self.output.str(" ");
+                }
+                FunctionKind::Setter(_) => {
+                    self.print_name_type(func.item_name(), TypeKind::FunctionSetter);
+                    self.output.str(": ");
+                    self.output.keyword("set");
+                    self.output.str(" ");
+                }
                 FunctionKind::Static(_) => {
                     self.print_name_type(func.item_name(), TypeKind::FunctionStatic);
                     self.output.str(": ");
@@ -342,7 +354,7 @@ impl<O: Output> WitPrinter<O> {
 
         // Methods don't print their `self` argument
         let params_to_skip = match &func.kind {
-            FunctionKind::Method(_) => 1,
+            FunctionKind::Method(_) | FunctionKind::Getter(_) | FunctionKind::Setter(_) => 1,
             _ => 0,
         };
         for (i, (name, ty)) in func.params.iter().skip(params_to_skip).enumerate() {
@@ -1099,9 +1111,11 @@ impl<O: Output> WitPrinter<O> {
 fn resource_func(f: &Function) -> Option<TypeId> {
     match f.kind {
         FunctionKind::Freestanding => None,
-        FunctionKind::Method(id) | FunctionKind::Constructor(id) | FunctionKind::Static(id) => {
-            Some(id)
-        }
+        FunctionKind::Method(id)
+        | FunctionKind::Constructor(id)
+        | FunctionKind::Static(id)
+        | FunctionKind::Getter(id)
+        | FunctionKind::Setter(id) => Some(id),
     }
 }
 
@@ -1142,6 +1156,8 @@ fn is_keyword(name: &str) -> bool {
             | "as"
             | "from"
             | "static"
+            | "get"
+            | "set"
             | "interface"
             | "tuple"
             | "world"
@@ -1288,6 +1304,10 @@ pub enum TypeKind {
     FunctionFreestanding,
     /// A method, associated with a resource.
     FunctionMethod,
+    /// A getter method, associated with a resource.
+    FunctionGetter,
+    /// A setter method, associated with a resource.
+    FunctionSetter,
     /// A static function, associated with a resource.
     FunctionStatic,
     /// A future type name.

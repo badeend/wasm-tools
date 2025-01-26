@@ -403,6 +403,22 @@ impl<'a> Converter<'a> {
                 let name = clean_func_name(resource_name, &func.name);
                 ResourceFunc::method(name)
             }
+            wit_parser::FunctionKind::Getter(id) => {
+                if id != resource_id {
+                    return None;
+                }
+                skip_first_param = true;
+                let name = clean_func_name(resource_name, &func.name);
+                ResourceFunc::getter(name)
+            }
+            wit_parser::FunctionKind::Setter(id) => {
+                if id != resource_id {
+                    return None;
+                }
+                skip_first_param = true;
+                let name = clean_func_name(resource_name, &func.name);
+                ResourceFunc::setter(name)
+            }
             wit_parser::FunctionKind::Static(id) => {
                 if id != resource_id {
                     return None;
@@ -435,6 +451,8 @@ impl<'a> Converter<'a> {
         match func.kind {
             wit_parser::FunctionKind::Method(_)
             | wit_parser::FunctionKind::Static(_)
+            | wit_parser::FunctionKind::Getter(_)
+            | wit_parser::FunctionKind::Setter(_)
             | wit_parser::FunctionKind::Constructor(_) => None,
             wit_parser::FunctionKind::Freestanding => {
                 let mut output = StandaloneFunc::new(func.name.clone());

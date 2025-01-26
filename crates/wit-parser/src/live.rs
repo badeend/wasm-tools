@@ -104,7 +104,10 @@ pub trait TypeIdVisitor {
 
             // The resource these are attached to is in the params/results, so
             // no need to re-add it here.
-            FunctionKind::Method(_) | FunctionKind::Constructor(_) => {}
+            FunctionKind::Method(_)
+            | FunctionKind::Constructor(_)
+            | FunctionKind::Getter(_)
+            | FunctionKind::Setter(_) => {}
 
             FunctionKind::Freestanding => {}
         }
