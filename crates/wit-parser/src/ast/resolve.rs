@@ -1166,21 +1166,52 @@ impl<'a> Resolver<'a> {
             ast::Type::Resource(resource) => {
                 // Validate here that the resource doesn't have any duplicate-ly
                 // named methods and that there's at most one constructor.
+
+                use std::collections::hash_map::Entry;
+
+                #[derive(PartialEq, Eq)]
+                enum NameStatus {
+                    Taken,
+                    GetterTaken,
+                    SetterTaken,
+                }
+
                 let mut ctors = 0;
-                let mut names = HashSet::new();
+                let mut names = HashMap::new();
                 for func in resource.funcs.iter() {
                     match func {
-                        ast::ResourceFunc::Method(f)
-                        | ast::ResourceFunc::Static(f)
-                        | ast::ResourceFunc::Getter(f)
-                        | ast::ResourceFunc::Setter(f) => {
-                            if !names.insert(&f.name.name) {
+                        ast::ResourceFunc::Method(f) | ast::ResourceFunc::Static(f) => {
+                            if names.insert(&f.name.name, NameStatus::Taken).is_some() {
                                 bail!(Error::new(
                                     f.name.span,
                                     format!("duplicate function name `{}`", f.name.name),
                                 ))
                             }
                         }
+                        ast::ResourceFunc::Getter(f) => match names.entry(&f.name.name) {
+                            Entry::Vacant(v) => {
+                                v.insert(NameStatus::GetterTaken);
+                            }
+                            Entry::Occupied(mut o) if *o.get() == NameStatus::SetterTaken => {
+                                o.insert(NameStatus::Taken);
+                            }
+                            Entry::Occupied(_) => bail!(Error::new(
+                                f.name.span,
+                                format!("duplicate function name `{}`", f.name.name),
+                            )),
+                        },
+                        ast::ResourceFunc::Setter(f) => match names.entry(&f.name.name) {
+                            Entry::Vacant(v) => {
+                                v.insert(NameStatus::SetterTaken);
+                            }
+                            Entry::Occupied(mut o) if *o.get() == NameStatus::GetterTaken => {
+                                o.insert(NameStatus::Taken);
+                            }
+                            Entry::Occupied(_) => bail!(Error::new(
+                                f.name.span,
+                                format!("duplicate function name `{}`", f.name.name),
+                            )),
+                        },
                         ast::ResourceFunc::Constructor(f) => {
                             ctors += 1;
                             if ctors > 1 {

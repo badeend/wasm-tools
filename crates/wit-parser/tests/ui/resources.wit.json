@@ -126,8 +126,8 @@
             }
           ]
         },
-        "[set]d.d": {
-          "name": "[set]d.d",
+        "[set]d.c": {
+          "name": "[set]d.c",
           "kind": {
             "setter": 3
           },

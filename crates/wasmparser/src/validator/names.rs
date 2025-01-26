@@ -468,7 +468,7 @@ impl Hash for ComponentNameKind<'_> {
         match self {
             Label(name) => (0u8, name).hash(hasher),
             Constructor(name) => (1u8, name).hash(hasher),
-            // for hashing method == static
+            // for hashing, all named methods are equivalent (regular, static, getter/setter)
             Method(name) | Static(name) | Getter(name) | Setter(name) => (2u8, name).hash(hasher),
             Interface(name) => (3u8, name).hash(hasher),
             Dependency(name) => (4u8, name).hash(hasher),
@@ -486,7 +486,8 @@ impl PartialEq for ComponentNameKind<'_> {
             (Label(_), _) => false,
             (Constructor(a), Constructor(b)) => a == b,
             (Constructor(_), _) => false,
-
+            // Getter & setters may share a single name
+            (Getter(_), Setter(_)) | (Setter(_), Getter(_)) => false,
             // method == static for the purposes of hashing so equate them here
             // as well.
             (

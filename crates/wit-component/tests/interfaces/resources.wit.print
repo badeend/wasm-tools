@@ -6,7 +6,7 @@ interface foo {
     a: static func();
     b: func();
     c: get func() -> u32;
-    d: set func(value: u32);
+    c: set func(value: u32);
   }
 
   type t = bar;
