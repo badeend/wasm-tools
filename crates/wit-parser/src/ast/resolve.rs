@@ -1645,9 +1645,7 @@ impl<'a> Resolver<'a> {
             // values, so plumb them through as-is.
             FunctionKind::Freestanding
             | FunctionKind::Method(_)
-            | FunctionKind::Static(_)
-            | FunctionKind::Getter(_)
-            | FunctionKind::Setter(_) => match results {
+            | FunctionKind::Static(_) => match results {
                 ResultList::Named(rs) => Ok(Results::Named(self.resolve_params(
                     rs,
                     &FunctionKind::Freestanding,
@@ -1656,6 +1654,21 @@ impl<'a> Resolver<'a> {
                 ResultList::Anon(ty) => {
                     Ok(Results::Anon(self.resolve_type(ty, &Stability::Unknown)?))
                 }
+            },
+            FunctionKind::Getter(_) => match results {
+                ResultList::Anon(ty) => Ok(Results::Anon(self.resolve_type(ty, &Stability::Unknown)?)),
+                ResultList::Named(_) => bail!(Error::new(
+                    span,
+                    format!("getter must declare a single return type"),
+                )),
+            },
+            FunctionKind::Setter(_) => match results {
+                ResultList::Anon(ty) => Ok(Results::Anon(self.resolve_type(ty, &Stability::Unknown)?)),
+                ResultList::Named(rs) if rs.len() == 0 => Ok(Results::Named(vec![])),
+                ResultList::Named(_) => bail!(Error::new(
+                    span,
+                    format!("setter must return unit or a single result"),
+                )),
             },
 
             // Constructors are alwys parsed as 0 returned types but they're
